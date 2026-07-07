@@ -22,6 +22,23 @@ $env:DATABASE_URL="postgres://postgres:123456@127.0.0.1:5432/image-ai?sslmode=di
 go run ./cmd/migrate
 ```
 
+Install an empty database and create the initial admin:
+
+```powershell
+cd backend
+$env:DATABASE_URL="postgres://postgres:123456@127.0.0.1:5432/image-ai?sslmode=disable"
+go run ./cmd/dbinit
+```
+
+Default admin:
+
+```txt
+Email: admin@example.com
+Password: 123456
+```
+
+See `INSTALL.md` for custom initial admin options.
+
 Start API:
 
 ```powershell
