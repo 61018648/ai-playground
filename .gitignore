@@ -1,0 +1,23 @@
+.codegraph/
+.superpowers/
+.frontend-git-backup/
+
+# Local assistant/config caches
+.agents/
+.claude/
+
+# Go build/cache artifacts
+backend/.gocache/
+backend/.gomodcache/
+backend/tmp/
+
+# Node/Nuxt artifacts
+frontend/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/--host=0.0.0.0/
+frontend/.git/
+
+# Environment and logs
+.env
+*.log
