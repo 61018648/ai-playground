@@ -47,7 +47,7 @@ INSERT INTO site_settings (key, value)
 VALUES
   (
     'seo',
-    '{"siteName":"摘星AI","title":"摘星AI - AI 创作广场","description":"摘星AI 创作平台，提供 AI 绘画、电商视觉、文案创作等一站式智能创作工具。","keywords":"AI生图,AI绘画,电商视觉,AI创作"}'
+    '{"siteName":"AI Playground","title":"AI Playground - AI 创作广场","description":"AI 创作平台，提供 AI 绘画、电商视觉、文案创作等一站式智能创作工具。","keywords":"AI生图,AI绘画,电商视觉,AI创作"}'
   ),
   (
     'auth',
@@ -55,7 +55,7 @@ VALUES
   ),
   (
     'smtp',
-    '{"host":"","port":587,"username":"","password":"","fromName":"摘星AI","fromEmail":"","secure":false}'
+    '{"host":"","port":587,"username":"","password":"","fromName":"AI Playground","fromEmail":"","secure":false}'
   )
 ON CONFLICT (key) DO NOTHING;
 

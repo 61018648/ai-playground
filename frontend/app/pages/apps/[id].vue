@@ -14,6 +14,7 @@ const route = useRoute()
 const api = useApi()
 const auth = useAuth()
 const message = useMessage()
+const { pageTitle } = useSiteConfig()
 
 const appId = computed(() => String(route.params.id || ''))
 const queryPrompt = computed(() => {
@@ -189,7 +190,7 @@ const submitAppMessage = async () => {
 }
 
 useHead(() => ({
-  title: app.value ? `${app.value.name} - 应用对话 - 摘星AI` : '应用对话 - 摘星AI'
+  title: pageTitle(app.value ? `${app.value.name} - 应用对话` : '应用对话')
 }))
 </script>
 

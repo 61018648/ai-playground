@@ -262,13 +262,13 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	user, passwordHash, err := h.repo.UserByEmail(r.Context(), normalizeEmail(req.Email))
 	if errors.Is(err, repository.ErrNotFound) || !security.CheckPassword(passwordHash, req.Password) {
-		_ = h.repo.RecordLoginLog(r.Context(), nil, normalizeEmail(req.Email), false, clientIP(r), r.UserAgent(), "闁喚顔堥幋鏍х槕閻椒绗夊锝団€?")
-		httpx.Error(w, http.StatusUnauthorized, "闁喚顔堥幋鏍х槕閻椒绗夊锝団€?")
+		_ = h.repo.RecordLoginLog(r.Context(), nil, normalizeEmail(req.Email), false, clientIP(r), r.UserAgent(), "邮箱或密码错误")
+		httpx.Error(w, http.StatusUnauthorized, "邮箱或密码错误")
 		return
 	}
 	if err != nil {
-		_ = h.repo.RecordLoginLog(r.Context(), nil, normalizeEmail(req.Email), false, clientIP(r), r.UserAgent(), "閻ц缍嶆径杈Е")
-		httpx.Error(w, http.StatusInternalServerError, "閻ц缍嶆径杈Е")
+		_ = h.repo.RecordLoginLog(r.Context(), nil, normalizeEmail(req.Email), false, clientIP(r), r.UserAgent(), "登录失败")
+		httpx.Error(w, http.StatusInternalServerError, "登录失败")
 		return
 	}
 	ttl := h.cfg.TokenTTL
@@ -280,7 +280,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, "閻ц缍嶆禒銈囧閻㈢喐鍨氭径杈Е")
 		return
 	}
-	_ = h.repo.RecordLoginLog(r.Context(), &user.ID, user.Email, true, clientIP(r), r.UserAgent(), "閻ц缍嶉幋鎰")
+	_ = h.repo.RecordLoginLog(r.Context(), &user.ID, user.Email, true, clientIP(r), r.UserAgent(), "登录成功")
 	httpx.JSON(w, http.StatusOK, map[string]any{"user": user, "accessToken": token})
 }
 
@@ -389,6 +389,7 @@ func (h *Handler) CreateGeneration(w http.ResponseWriter, r *http.Request) {
 	if modelName == "" {
 		modelName = "placeholder-v1"
 	}
+	var taskProvider model.APIProvider
 	if req.AppID != nil {
 		app, provider, err := h.resolveGenerationAppConfig(r.Context(), *req.AppID)
 		if errors.Is(err, repository.ErrNotFound) {
@@ -399,11 +400,13 @@ func (h *Handler) CreateGeneration(w http.ResponseWriter, r *http.Request) {
 			httpx.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		taskProvider = provider
 		effectivePrompt = renderAppPromptTemplate(app.PromptTemplate, req.Prompt, req.Params)
 		if strings.TrimSpace(provider.Model) != "" {
 			modelName = provider.Model
 		}
 	} else if provider, err := h.repo.EnabledAPIProviderByCategory(r.Context(), "general"); err == nil {
+		taskProvider = provider
 		if strings.TrimSpace(provider.Model) != "" {
 			modelName = provider.Model
 		}
@@ -417,15 +420,15 @@ func (h *Handler) CreateGeneration(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, "閸掓稑缂撻悽鐔稿灇娴犺濮熸径杈Е")
 		return
 	}
-	_ = h.repo.RecordTaskLog(r.Context(), &job.ID, &claims.UserID, "generation.create", job.Status, "閸掓稑缂撻悽鐔稿灇娴犺濮?", job.Params)
+	_ = h.repo.RecordTaskLog(r.Context(), &job.ID, &claims.UserID, "generation.create", job.Status, "已创建生成任务", taskLogMetaWithProvider(job.Params, taskProvider))
 	// V1 uses a synchronous placeholder result so frontend history can be wired immediately.
 	if err := h.repo.CompleteGenerationPlaceholder(r.Context(), job.ID); err != nil {
 		log.Printf("complete placeholder generation %s: %v", job.ID, err)
-		_ = h.repo.RecordTaskLog(r.Context(), &job.ID, &claims.UserID, "generation.complete", "failed", err.Error(), nil)
+		_ = h.repo.RecordTaskLog(r.Context(), &job.ID, &claims.UserID, "generation.complete", "failed", err.Error(), taskLogMetaWithProvider(nil, taskProvider))
 		httpx.Error(w, http.StatusInternalServerError, "閻㈢喐鍨氭禒璇插閸楃姳缍呯紒鎾寸亯閸愭瑥鍙嗘径杈Е")
 		return
 	}
-	_ = h.repo.RecordTaskLog(r.Context(), &job.ID, &claims.UserID, "generation.complete", "succeeded", "閸楃姳缍呴悽鐔稿灇鐎瑰本鍨?", nil)
+	_ = h.repo.RecordTaskLog(r.Context(), &job.ID, &claims.UserID, "generation.complete", "succeeded", "生成任务已完成", taskLogMetaWithProvider(nil, taskProvider))
 	job, err = h.repo.GenerationByID(r.Context(), claims.UserID, job.ID)
 	if err != nil {
 		httpx.Error(w, http.StatusInternalServerError, "閼惧嘲褰囬悽鐔稿灇缂佹挻鐏夋径杈Е")
@@ -564,9 +567,30 @@ func (h *Handler) CreateProfessionalDraw(w http.ResponseWriter, r *http.Request)
 		httpx.Error(w, http.StatusInternalServerError, "閹绘劒姘︽稉鎾茬瑹缂佹鏁炬禒璇插婢惰精瑙?")
 		return
 	}
-	_ = h.repo.RecordTaskLog(r.Context(), &result.Job.ID, &claims.UserID, "generation.professional_draw", result.Job.Status, "涓撲笟缁樺浘浠诲姟宸叉彁浜?", req.Params)
+	_ = h.repo.RecordTaskLog(r.Context(), &result.Job.ID, &claims.UserID, "generation.professional_draw", result.Job.Status, "专业绘图任务已提交", taskLogMetaWithProvider(req.Params, provider))
 	httpx.JSON(w, http.StatusCreated, result)
 	go h.runProfessionalDrawJob(context.Background(), provider, result.ConversationID, result.Job.ID, effectivePrompt, req.Params, sourceImageURL)
+}
+
+func taskLogMetaWithProvider(meta json.RawMessage, provider model.APIProvider) json.RawMessage {
+	values := map[string]any{}
+	if len(meta) > 0 && string(meta) != "null" {
+		if err := json.Unmarshal(meta, &values); err != nil || values == nil {
+			values = map[string]any{"params": meta}
+		}
+	}
+	if provider.ID != "" {
+		values["providerId"] = provider.ID
+		values["providerName"] = provider.Name
+		values["provider"] = provider.Provider
+		values["providerCategory"] = provider.Category
+		values["model"] = provider.Model
+	}
+	data, err := json.Marshal(values)
+	if err != nil {
+		return json.RawMessage(`{}`)
+	}
+	return data
 }
 
 type professionalDrawSetting struct {
@@ -844,7 +868,7 @@ func (h *Handler) AssistantChat(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, "娣囨繂鐡ㄩ崝鈺傚娴兼俺鐦芥径杈Е")
 		return
 	}
-	_ = h.repo.RecordTaskLog(r.Context(), nil, &claims.UserID, "assistant.chat", "succeeded", "閺呴缚鍏橀崝鈺傚閸ョ偛顦茬€瑰本鍨?", nil)
+	_ = h.repo.RecordTaskLog(r.Context(), nil, &claims.UserID, "assistant.chat", "succeeded", "智能助手回复完成", taskLogMetaWithProvider(nil, provider))
 	httpx.JSON(w, http.StatusCreated, result)
 }
 
@@ -885,7 +909,7 @@ func (h *Handler) streamAssistantChat(w http.ResponseWriter, r *http.Request, us
 		writeSSE("error", map[string]string{"error": "娣囨繂鐡ㄩ崝鈺傚娴兼俺鐦芥径杈Е"})
 		return
 	}
-	_ = h.repo.RecordTaskLog(r.Context(), nil, &userID, "assistant.chat", "succeeded", "閺呴缚鍏橀崝鈺傚濞翠礁绱￠崶鐐差槻鐎瑰本鍨?", nil)
+	_ = h.repo.RecordTaskLog(r.Context(), nil, &userID, "assistant.chat", "succeeded", "智能助手流式回复完成", taskLogMetaWithProvider(nil, provider))
 	writeSSE("done", result)
 }
 

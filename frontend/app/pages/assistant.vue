@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ApiAssistantChatResult, ApiConversationDetail, ApiConversationMessage } from '~/composables/useApi'
 
-useHead({ title: '智能助手 - 摘星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('智能助手') }))
 
 interface AssistantAttachment {
   id: string

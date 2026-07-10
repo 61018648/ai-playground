@@ -15,7 +15,9 @@ import type {
   ApiUser
 } from '~/composables/useApi'
 
-useHead({ title: '控制面板 - 摘星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('控制面板') }))
 
 const api = useApi()
 const auth = useAuth()
@@ -133,6 +135,16 @@ const appTypeOptions = [
 
 const providerCategoryLabel = (value: string) => providerCategoryOptions.find(item => item.value === value)?.label || '通用生图'
 const appTypeLabel = (value: string) => appTypeOptions.find(item => item.value === value)?.label || '生图'
+const taskLogChannel = (log: ApiTaskLog) => {
+  const meta = log.meta || {}
+  const providerName = typeof meta.providerName === 'string' ? meta.providerName.trim() : ''
+  const provider = typeof meta.provider === 'string' ? meta.provider.trim() : ''
+  const model = typeof meta.model === 'string' ? meta.model.trim() : ''
+  if (providerName && model) return providerName + ' / ' + model
+  if (providerName) return providerName
+  if (provider && model) return provider + ' / ' + model
+  return model || provider || '-'
+}
 const activeProviderCategory = computed(() => {
   if (section.value === 'assistant') return 'general_text'
   return 'general'
@@ -1035,7 +1047,7 @@ const refreshAll = () => Promise.all([
             <UFormField label="发件人名称">
               <UInput
                 v-model="smtpForm.fromName"
-                placeholder="摘星AI"
+                placeholder="请输入发件人名称"
               />
             </UFormField>
             <UCheckbox
@@ -1843,16 +1855,17 @@ const refreshAll = () => Promise.all([
           </template>
 
           <template v-else>
-            <div class="grid grid-cols-[1fr_0.7fr_1.2fr_1fr] gap-3 px-4 py-3 text-xs font-medium text-dimmed border-b border-default">
+            <div class="grid grid-cols-[1fr_0.7fr_1fr_1.2fr_1fr] gap-3 px-4 py-3 text-xs font-medium text-dimmed border-b border-default">
               <span>动作</span>
               <span>状态</span>
+              <span>渠道</span>
               <span>消息</span>
               <span>时间</span>
             </div>
             <div
               v-for="log in taskLogs"
               :key="log.id"
-              class="grid grid-cols-[1fr_0.7fr_1.2fr_1fr] gap-3 px-4 py-3 text-sm border-b border-default last:border-b-0 items-center"
+              class="grid grid-cols-[1fr_0.7fr_1fr_1.2fr_1fr] gap-3 px-4 py-3 text-sm border-b border-default last:border-b-0 items-center"
             >
               <span class="truncate text-highlighted">{{ log.action }}</span>
               <UBadge
@@ -1861,6 +1874,7 @@ const refreshAll = () => Promise.all([
               >
                 {{ log.status || '-' }}
               </UBadge>
+              <span class="truncate text-toned">{{ taskLogChannel(log) }}</span>
               <span class="truncate text-toned">{{ log.message }}</span>
               <span class="text-dimmed">{{ new Date(log.createdAt).toLocaleString('zh-CN') }}</span>
             </div>

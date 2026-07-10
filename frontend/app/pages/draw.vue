@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { DrawCategory } from '~/composables/useDrawData'
 
-useHead({ title: '专业绘画 - 季星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('专业绘画') }))
 
 const { categories } = useDrawData()
 const route = useRoute()

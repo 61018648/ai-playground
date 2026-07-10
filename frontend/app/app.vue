@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { ApiSiteSetting } from '~/composables/useApi'
-
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -13,22 +11,16 @@ useHead({
   }
 })
 
-const api = useApi()
 const route = useRoute()
-const { data: publicSettings } = await useAsyncData('public-settings', () => api.get<ApiSiteSetting[]>('/public/settings'), {
-  default: () => []
-})
-const seoSetting = computed(() => publicSettings.value.find(item => item.key === 'seo')?.value || {})
-const title = computed(() => String(seoSetting.value.title || '摘星AI - AI 创作广场'))
-const description = computed(() => String(seoSetting.value.description || '摘星AI 创作平台,提供 AI 绘画、电商视觉、文案创作等一站式智能创作工具。'))
-const keywords = computed(() => String(seoSetting.value.keywords || 'AI生图,AI绘画,电商视觉,AI创作'))
+const api = useApi()
+const { siteTitle, siteDescription, siteKeywords } = useSiteConfig()
 
 useSeoMeta({
-  title,
-  description,
-  ogTitle: title,
-  ogDescription: description,
-  keywords,
+  title: siteTitle,
+  description: siteDescription,
+  ogTitle: siteTitle,
+  ogDescription: siteDescription,
+  keywords: siteKeywords,
   twitterCard: 'summary_large_image'
 })
 

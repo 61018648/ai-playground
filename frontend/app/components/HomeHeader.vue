@@ -4,6 +4,7 @@ const authOpen = ref(false)
 const userMenuOpen = ref(false)
 const paymentOpen = ref(false)
 const paymentMode = ref<'membership' | 'credits'>('membership')
+const { siteName } = useSiteConfig()
 const { toggle } = useSidebar()
 const auth = useAuth()
 const message = useMessage()
@@ -71,7 +72,7 @@ const openPayment = (mode: 'membership' | 'credits') => {
     <!-- 标题区(小屏隐藏副标题) -->
     <div class="shrink-0 leading-tight">
       <p class="text-sm font-semibold text-highlighted whitespace-nowrap">
-        摘星AI 首页
+        {{ siteName }} 首页
       </p>
       <p class="hidden sm:block text-xs text-dimmed">
         AI 创作广场
@@ -249,4 +250,3 @@ const openPayment = (mode: 'membership' | 'credits') => {
     />
   </header>
 </template>
-

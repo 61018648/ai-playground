@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ApiMediaAsset } from '~/composables/useApi'
 
-useHead({ title: '媒体库 - 摘星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('媒体库') }))
 
 const api = useApi()
 const auth = useAuth()

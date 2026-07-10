@@ -1,3 +1,9 @@
+<script setup lang="ts">
+const { siteName } = useSiteConfig()
+const logoMain = computed(() => siteName.value.replace(/AI$/i, '').trim() || siteName.value)
+const logoSuffix = computed(() => siteName.value.match(/AI$/i)?.[0] || '')
+</script>
+
 <template>
   <div class="flex items-center gap-2">
     <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm">
@@ -7,8 +13,11 @@
       />
     </div>
     <span class="text-xl font-bold tracking-tight text-highlighted">
-      摘星
-      <span class="text-primary">Ai</span>
+      {{ logoMain }}
+      <span
+        v-if="logoSuffix"
+        class="text-primary"
+      >{{ logoSuffix }}</span>
     </span>
   </div>
 </template>

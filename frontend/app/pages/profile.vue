@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ApiAffiliateDashboard, ApiAffiliateWithdrawal, ApiBalanceLog, ApiGeneration, ApiRedeemCodeResult, ApiUser } from '~/composables/useApi'
 
-useHead({ title: '个人中心 - 摘星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('个人中心') }))
 
 const api = useApi()
 const auth = useAuth()

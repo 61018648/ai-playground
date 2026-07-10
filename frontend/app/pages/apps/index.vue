@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ApiApp } from '~/composables/useApi'
 
-useHead({ title: '应用中心 - 摘星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('应用中心') }))
 
 const api = useApi()
 const { data: apps, pending, error } = await useAsyncData('apps-page', () => api.get<ApiApp[]>('/apps'), {

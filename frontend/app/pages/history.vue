@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ApiAsset, ApiBalanceLog, ApiGeneration } from '~/composables/useApi'
 
-useHead({ title: '生成历史 - 摘星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('生成历史') }))
 
 const api = useApi()
 const auth = useAuth()

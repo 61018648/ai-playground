@@ -96,7 +96,7 @@ export interface ApiAdminGeneration extends ApiGeneration {
 }
 
 export interface ApiSiteSetting {
-  key: 'seo' | 'auth' | 'smtp' | 'payment'
+  key: 'seo' | 'auth' | 'smtp' | 'payment' | 'professional_draw'
   value: Record<string, unknown>
   updatedAt: string
 }

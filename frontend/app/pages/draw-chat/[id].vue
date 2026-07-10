@@ -1,7 +1,9 @@
 ﻿<script setup lang="ts">
 import type { ApiAsset, ApiConversationDetail, ApiConversationMessage, ApiDrawConversationResult, ApiGeneration } from '~/composables/useApi'
 
-useHead({ title: '绘画会话 - 季星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('绘画会话') }))
 
 const api = useApi()
 const auth = useAuth()

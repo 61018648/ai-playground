@@ -44,6 +44,11 @@ type paymentPlan struct {
 	Period          string `json:"period"`
 }
 
+type seoSetting struct {
+	SiteName string `json:"siteName"`
+	Title    string `json:"title"`
+}
+
 var defaultCreditPlans = []paymentPlan{
 	{Code: "credits_basic", Name: "基础积分", OrderType: "credits", Amount: "30.00", Credits: 3000, Desc: "3000 积分"},
 	{Code: "credits_plus", Name: "高级积分", OrderType: "credits", Amount: "50.00", Credits: 5000, Desc: "5000 积分"},
@@ -85,7 +90,7 @@ func (h *Handler) CreatePaymentOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	claims, _ := middleware.ClaimsFromContext(r.Context())
 	tradeNo := "PAY" + time.Now().Format("20060102150405") + strings.ToUpper(randomString(6))
-	name := "摘星AI-" + plan.Name
+	name := h.paymentOrderName(r, plan.Name)
 	notifyURL := setting.NotifyURL
 	if notifyURL == "" {
 		notifyURL = requestBaseURL(r) + "/api/v1/pay/epay/notify"
@@ -132,6 +137,36 @@ func (h *Handler) CreatePaymentOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.JSON(w, http.StatusOK, map[string]any{"order": order, "payUrl": payURL})
+}
+
+func (h *Handler) paymentOrderName(r *http.Request, planName string) string {
+	siteName := h.siteName(r)
+	if siteName == "" {
+		return planName
+	}
+	return siteName + "-" + planName
+}
+
+func (h *Handler) siteName(r *http.Request) string {
+	setting, err := h.repo.SiteSettingByKey(r.Context(), "seo")
+	if err != nil {
+		return ""
+	}
+	var value seoSetting
+	if err := json.Unmarshal(setting.Value, &value); err != nil {
+		return ""
+	}
+	if name := strings.TrimSpace(value.SiteName); name != "" {
+		return name
+	}
+	title := strings.TrimSpace(value.Title)
+	if title == "" {
+		return ""
+	}
+	if before, _, ok := strings.Cut(title, " - "); ok {
+		return strings.TrimSpace(before)
+	}
+	return title
 }
 
 func (h *Handler) EPayNotify(w http.ResponseWriter, r *http.Request) {

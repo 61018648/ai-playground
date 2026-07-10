@@ -1,5 +1,7 @@
 <script setup lang="ts">
-useHead({ title: '更多工具 - 摘星AI' })
+const { pageTitle } = useSiteConfig()
+
+useHead(() => ({ title: pageTitle('更多工具') }))
 </script>
 
 <template>
